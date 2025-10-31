@@ -129,7 +129,7 @@ void addPathLossSample(float rssi, float distance, bool isWiFi);
 void processMeshTimeSyncWithDelay(const String &senderId, const String &message, uint32_t rxMicros);
 
 extern ClockDiscipline clockDiscipline;
-extern PathLossCalibration pathLoss;
+extern AdaptivePathLoss pathLoss;
 extern std::map<String, uint32_t> nodePropagationDelays;
 extern std::vector<NodeSyncStatus> nodeSyncStatus;
 extern uint8_t triangulationTarget[6];

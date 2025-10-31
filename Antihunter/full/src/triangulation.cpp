@@ -30,13 +30,7 @@ bool triangulationActive = false;
 bool triangulationInitiator = false;
 char triangulationTargetIdentity[10] = {0};
 
-PathLossCalibration pathLoss = {
-    -30.0,  // rssi0_wifi: WiFi @ 1m with 20dBm tx + 3dBi antenna = 23dBm EIRP → -30dBm @ 1m
-    -66.0,  // rssi0_ble: BLE @ 1m with ~0dBm tx + 0dBi antenna (no external antenna)
-    3.0,    // n_wifi: indoor environment
-    2.5,    // n_ble: indoor/close-range
-    false
-};
+AdaptivePathLoss pathLoss;
 
 // Helpers
 bool isTriangulationActive() {
@@ -928,7 +922,7 @@ String calculateTriangulation() {
         }
         
         float syncError = syncVerified ? 0.0 : (avgDistance * 0.10);
-        float calibError = pathLoss.calibrated ? 0.0 : (avgDistance * 0.15);
+        float calibError = (pathLoss.wifi_calibrated || pathLoss.ble_calibrated) ? 0.0 : (avgDistance * 0.15);
         
         float uncertainty = sqrt(
             gpsPositionError * gpsPositionError +
@@ -1181,7 +1175,9 @@ void calibrationTask(void *parameter) {
     }
     
     if (wifiSamples.size() >= 10 || bleSamples.size() >= 10) {
-        pathLoss.calibrated = true;
+        // Set calibration flags based on which samples were collected
+        if (wifiSamples.size() >= 10) pathLoss.wifi_calibrated = true;
+        if (bleSamples.size() >= 10) pathLoss.ble_calibrated = true;
         Serial.println("\n[CALIB] Status: CALIBRATED");
     } else {
         Serial.println("\n[CALIB] Status: FAILED");
@@ -1281,17 +1277,7 @@ void processMeshTimeSyncWithDelay(const String &senderId, const String &message,
 }
 
 
-AdaptivePathLoss adaptivePathLoss = {
-    -30.0,  // rssi0_wifi initial
-    -66.0,  // rssi0_ble initial
-    3.0,    // n_wifi initial
-    2.5,    // n_ble initial
-    {},     // wifiSamples
-    {},     // bleSamples
-    false,  // wifi_calibrated
-    false,  // ble_calibrated
-    0       // lastUpdate
-};
+AdaptivePathLoss adaptivePathLoss;
 
 // Least squares estimation of path loss parameters
 void estimatePathLossParameters(bool isWiFi) {

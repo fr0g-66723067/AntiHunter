@@ -179,11 +179,8 @@ void setup() {
     xTaskCreatePinnedToCore(uartForwardTask, "UARTForwardTask", 4096, NULL, 2, NULL, 1);
     delay(120);
 
-    esp_task_wdt_config_t wdt_config = {
-        .timeout_ms = 30000,
-        .idle_core_mask = 0,
-        .trigger_panic = true
-    };
+    // Initialize watchdog with 30 second timeout
+    esp_task_wdt_init(30, true);
 
     Serial.println("=== Boot Complete - HEADLESS ===");
     Serial.printf("Mesh @ 115200 on pins %d,%d\n", MESH_RX_PIN, MESH_TX_PIN);
