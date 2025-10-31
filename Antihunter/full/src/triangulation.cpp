@@ -1281,17 +1281,20 @@ void processMeshTimeSyncWithDelay(const String &senderId, const String &message,
 }
 
 
-AdaptivePathLoss adaptivePathLoss = {
-    -30.0,  // rssi0_wifi initial
-    -66.0,  // rssi0_ble initial
-    3.0,    // n_wifi initial
-    2.5,    // n_ble initial
-    {},     // wifiSamples
-    {},     // bleSamples
-    false,  // wifi_calibrated
-    false,  // ble_calibrated
-    0       // lastUpdate
-};
+static AdaptivePathLoss createDefaultAdaptivePathLoss() {
+    AdaptivePathLoss apl;
+    apl.rssi0_wifi = -30.0;
+    apl.rssi0_ble = -66.0;
+    apl.n_wifi = 3.0;
+    apl.n_ble = 2.5;
+    // wifiSamples and bleSamples are default-constructed (empty)
+    apl.wifi_calibrated = false;
+    apl.ble_calibrated = false;
+    apl.lastUpdate = 0;
+    return apl;
+}
+
+AdaptivePathLoss adaptivePathLoss = createDefaultAdaptivePathLoss();
 
 // Least squares estimation of path loss parameters
 void estimatePathLossParameters(bool isWiFi) {

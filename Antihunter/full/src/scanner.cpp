@@ -408,7 +408,7 @@ String getDeauthReasonText(uint16_t reasonCode) {
     }
 }
 
-static void IRAM_ATTR detectDeauthFrame(const wifi_promiscuous_pkt_t *ppkt) {
+static void detectDeauthFrame(const wifi_promiscuous_pkt_t *ppkt) {
     if (!deauthDetectionEnabled) return;
     if (!ppkt || ppkt->rx_ctrl.sig_len < 26) return;
     
@@ -1060,6 +1060,11 @@ String getSnifferCache()
     return result;
 }
 
+// Helper for sorting deauth stats
+static bool compareDeauthStats(const std::pair<String, DeauthStats>& a, const std::pair<String, DeauthStats>& b) {
+    return a.second.count > b.second.count;
+}
+
 std::string buildDeauthResults(bool forever, int duration, uint32_t deauthCount, 
                                 uint32_t disassocCount, const std::vector<DeauthHit>& deauthLog) {
     std::map<String, DeauthStats> statsMap;
@@ -1102,8 +1107,7 @@ std::string buildDeauthResults(bool forever, int duration, uint32_t deauthCount,
         results += "===============\n\n";
         
         std::vector<std::pair<String, DeauthStats>> sorted(statsMap.begin(), statsMap.end());
-        std::sort(sorted.begin(), sorted.end(),
-            [](const auto& a, const auto& b) { return a.second.count > b.second.count; });
+        std::sort(sorted.begin(), sorted.end(), compareDeauthStats);
         
         for (size_t i = 0; i < sorted.size() && i < 100; i++) {
             const auto& entry = sorted[i];
@@ -1394,7 +1398,7 @@ static uint8_t extractChannelFromIE(const uint8_t *payload, uint16_t length) {
     return 0;
 }
 
-static void IRAM_ATTR sniffer_cb(void *buf, wifi_promiscuous_pkt_type_t type)
+static void sniffer_cb(void *buf, wifi_promiscuous_pkt_type_t type)
 {
     if (!buf) return;
     
